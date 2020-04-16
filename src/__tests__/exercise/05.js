@@ -8,15 +8,15 @@ import Login from '../../components/login-submission'
 // 🐨 The next lines are here to silence a warning that you'll be fixing
 // so go ahead and delete these lines.
 // 💣 delete start
-beforeAll(() => {
-  jest.spyOn(console, 'error').mockImplementation(() => {})
-  jest.spyOn(console, 'warn').mockImplementation(() => {})
-})
+// beforeAll(() => {
+//   jest.spyOn(console, 'error').mockImplementation(() => {})
+//   jest.spyOn(console, 'warn').mockImplementation(() => {})
+// })
 
-afterAll(() => {
-  console.error.mockRestore()
-  console.warn.mockRestore()
-})
+// afterAll(() => {
+//   console.error.mockRestore()
+//   console.warn.mockRestore()
+// })
 // 💣 delete end
 
 test('submitting the form calls onSubmit with username and password', async () => {
@@ -30,16 +30,35 @@ test('submitting the form calls onSubmit with username and password', async () =
   const username = 'chucknorris'
   const password = 'i need no password'
 
+  // window.fetch = jest
+  //   .fn()
+  //   .mockResolvedValueOnce({json: () => Promise.resolve({token: 'fake-token'})})
+
+  jest
+    .spyOn(window, 'fetch')
+    .mockImplementation(() =>
+      Promise.resolve({json: () => Promise.resolve({token: 'fake-token'})}),
+    )
+
   userEvent.type(screen.getByLabelText(/username/i), username)
   userEvent.type(screen.getByLabelText(/password/i), password)
   userEvent.click(screen.getByText(/submit/i))
 
   // as soon as the user hits submit, we render a spinner to the screen. That
   // spinner has an aria-label of "loading..." for accessibility purposes, so
+  // screen.getByLabelText(/loading/i)
+  await screen.findByLabelText(/loading/i)
   // 🐨 assert that there is an element labeled "loading" in the document
   // 💰 you'll need to use a `find*` query variant like findByLabelText (so you'll want to use `await`)
   // 📜 https://testing-library.com/docs/dom-testing-library/api-queries#findby
 
+  expect(window.fetch).toHaveBeenCalledTimes(1)
+  expect(window.fetch).toHaveBeenCalledWith(
+    '/api/login',
+    expect.objectContaining({
+      body: JSON.stringify({username, password}),
+    }),
+  )
   // 🐨 assert that window.fetch was called appropriately.
   // 💰 There are various ways to do this, here are a few methods that might be
   // helpful for you with you use `expect(window.fetch)`:
